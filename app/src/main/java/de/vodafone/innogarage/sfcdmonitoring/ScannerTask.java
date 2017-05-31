@@ -7,33 +7,41 @@ import org.json.JSONObject;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-public class ScannerTask extends AsyncTask<ConnectionManager, Void, List<String>> {
+public class ScannerTask extends AsyncTask<ServerConnection, Void, List<String>> {
+
+
+    protected String mClientId;
+    public ScannerTask (String clientId){
+        this.mClientId = clientId;
+    }
 
 
 
     @Override
-    protected List<String> doInBackground(ConnectionManager... params) {
+    protected List<String> doInBackground(ServerConnection... params) {
 
-        ConnectionManager conMan = null;
+
+
+        ServerConnection serverConnection = null;
         if(params.length == 1)
-            conMan = params[0];
+            serverConnection = params[0];
 
-        Connection con = null;
+        IncomingMessages incomingMessages = null;
         List<JSONObject> msgList = null;
         JSONObject actMsg = null;
         CopyOnWriteArrayList<String> rs = new CopyOnWriteArrayList<>();
-        List<Connection> cons = null;
+        List<IncomingMessages> cons = null;
 
-        if(!conMan.getConnections().isEmpty()){
+        if(!serverConnection.getConnections().isEmpty()){
 
-            cons = conMan.getConnections();
+            cons = serverConnection.getConnections();
 
 
-            if(con == null){
-                con = cons.get(0);
+            if(incomingMessages == null){
+                incomingMessages = cons.get(0);
             }
 
-            msgList = con.getIncomingData();
+            msgList = incomingMessages.getIncomingData();
 
             if(!msgList.isEmpty()) {
 
@@ -117,7 +125,7 @@ public class ScannerTask extends AsyncTask<ConnectionManager, Void, List<String>
 
 
                 try {
-                    name = con.getName();
+                    name = incomingMessages.getName();
 
                     temperature =   actMsg.getJSONObject("gstatus").getString("temperature");
                     currenttime =   actMsg.getJSONObject("gstatus").getString("currenttime");
@@ -372,6 +380,12 @@ public class ScannerTask extends AsyncTask<ConnectionManager, Void, List<String>
         }
         return rs;
     }
+
+
+
+
+
+
 
 
 }

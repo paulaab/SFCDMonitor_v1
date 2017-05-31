@@ -1,11 +1,17 @@
 package de.vodafone.innogarage.sfcdmonitoring;
 
 import android.content.Context;
+import android.graphics.Color;
+import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
 
 import android.os.Bundle;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.BaseAdapter;
 import android.widget.Button;
+import android.widget.ListView;
 import android.widget.TextView;
 
 import java.util.List;
@@ -18,51 +24,50 @@ public class MainActivity extends AppCompatActivity {
     //Define socket variables (ports)
     public static boolean debugMode = true;
     public static int socketPortForBroadcast = 45555;
-    public static int socketServerPortForSFCD = 45556;
+
+    public static int PORT = 45556;
     //Define variables for connection
-    ConnectionManager conMan = new ConnectionManager();
-    List<Connection> cons = conMan.getConnections();
+    Context globalContext;
     TimerTask timerTask;
     Timer timer = new Timer();
-
-
-
-
-
+    ServerConnection serverConnection = new ServerConnection();
+    List<IncomingMessages> connectionList = serverConnection.getConnections();
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        //globalContext = this;
+        globalContext = this;
 
         final Button button = (Button) findViewById(R.id.buttonInvitation);
-        button.setOnClickListener(new View.OnClickListener(){
+        button.setOnClickListener(new View.OnClickListener() {
 
-            public void onClick(View v){
+            public void onClick(View v) {
 
-                conMan.sendInvitation();
+                new Broadcaster().start();
             }
         });
 
 
 
-        // TODO: check if this works, if so remove it
-        // does not work properly with the given software structure
-        // new Inviter().start();
+
+
+    }
+    protected void updateView(final String mClientIP){
+
 
         timerTask = new TimerTask() {
 
             public void run() {
-                new ScannerTask() {
+                new ScannerTask(mClientIP) {
 
                     protected void onPostExecute(List<String> result) {
 
-                        if (!cons.isEmpty() &&!result.isEmpty()) {
+                        if (!connectionList.isEmpty() &&!result.isEmpty()) {
 
-                            //ListView liste = (ListView) findViewById(R.id.lv_SFCDListe);
-                            //liste.setAdapter(new ListViewAdapter(globalConext, conMan));
+                            //ListView listDevices = (ListView) findViewById(R.id.mSFCDList);
+                            //listDevices.setAdapter(new ListViewAdapter(globalContext, serverConnection));
 
                             //GSTATUS
                             TextView temp = (TextView) findViewById(R.id.sfcdname);
@@ -201,10 +206,14 @@ public class MainActivity extends AppCompatActivity {
                             temp.setText(result.remove(0));
                         }
                     }
-                }.execute(conMan);
+                }.execute(serverConnection);
             }
         };
         timer.schedule(timerTask, 0, 200);
 
+
+
     }
+
 }
+
